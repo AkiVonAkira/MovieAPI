@@ -1,4 +1,7 @@
-﻿namespace MovieAPI.Data
+﻿using Microsoft.EntityFrameworkCore;
+using MovieAPI.Models;
+
+namespace MovieAPI.Data
 {
     public class DataContext : DbContext
     {
@@ -6,6 +9,8 @@
         {
         }
 
-        public DbSet<TodoItem> TodoItems => Set<TodoItem>();
+        public DbSet<Movie> Movies { get; set; }
+        public DbSet<Genre> Genres { get; set; }
+        public DbSet<Person> Persons { get; set; }
     }
 }
