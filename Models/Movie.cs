@@ -12,5 +12,6 @@ namespace MovieAPI.Models
         [Required]
         [StringLength(250)]
         public string MovieLink { get; set; }
+        public int tmbdId { get; set; }
     }
 }

@@ -5,12 +5,12 @@ namespace MovieAPI.Data
 {
     public class DataContext : DbContext
     {
-        public DataContext(DbContextOptions<DataContext> options) : base(options)
-        {
-        }
+        public DataContext(DbContextOptions<DataContext> options) : base(options) { }
 
         public DbSet<Movie> Movies { get; set; }
         public DbSet<Genre> Genres { get; set; }
         public DbSet<Person> Persons { get; set; }
+        public DbSet<PersonGenre> personGenres { get; set; }
+        public DbSet<MovieRating> movieRatings { get; set; }
     }
 }
