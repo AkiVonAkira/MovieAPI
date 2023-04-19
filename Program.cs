@@ -32,14 +32,17 @@ namespace MovieAPI
             app.UseHttpsRedirection();
             //app.UseAuthorization();
 
-            app.MapGet("/", () => "Welcome to Movie APIs");
-
             //Get all Movies
-            app.MapGet("/api/movie", async (DataContext context) => await context.Movies.ToListAsync());
+            app.MapGet("/api/movie", async (DataContext context) =>
+            {
+                await context.Movies.ToListAsync();
+                return context.Movies;
+            }).WithName("GetMovies");
 
             //Get Movies by id
             app.MapGet("/api/movie/{id}", async (DataContext context, int id) =>
-                await context.Movies.FindAsync(id) is Movie movie ? Results.Ok(movie) : Results.NotFound("Movie not found."));
+                await context.Movies.FindAsync(id) is Movie movie ? Results.Ok(movie) : Results.NotFound("Movie not found.")
+            ).WithName("GetMovieByID");
 
             //Create Movies
             app.MapPost("/api/movie", async (DataContext context, Movie movie) =>
@@ -47,7 +50,7 @@ namespace MovieAPI
                 context.Movies.Add(movie);
                 await context.SaveChangesAsync();
                 return Results.Created($"/api/Movie/{movie.MovieId}", movie);
-            });
+            }).WithName("CreateMovie");
 
             //Updating Movies
             app.MapPut("/api/movie/{id}", async (DataContext context, Movie updatedMovie, int id) =>
@@ -61,10 +64,10 @@ namespace MovieAPI
                     return Results.Ok(updatedMovie);
                 }
                 return Results.NotFound("Movie not found");
-            });
+            }).WithName("UpdateMovie");
 
 
-            //Deleting Todo Items
+            //Deleting Movies
             app.MapDelete("/api/Movie/{id}", async (DataContext context, int id) =>
             {
                 var movieItemFromDb = await context.Movies.FindAsync(id);
@@ -76,7 +79,7 @@ namespace MovieAPI
                     return Results.Ok();
                 }
                 return Results.NotFound("Movie not found");
-            });
+            }).WithName("DeleteMovie");
 
             app.Run();
         }

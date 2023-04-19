@@ -7,7 +7,7 @@ namespace MovieAPI.Models
         [Key]
         public int MovieId { get; set; }
         [Required]
-        [StringLength(25)]
+        [StringLength(50)]
         public string MovieName { get; set; }
         [Required]
         [StringLength(250)]
