@@ -10,7 +10,9 @@ namespace MovieAPI.Data
         public DbSet<Movie> Movies { get; set; }
         public DbSet<Genre> Genres { get; set; }
         public DbSet<Person> Persons { get; set; }
-        public DbSet<PersonGenre> personGenres { get; set; }
-        public DbSet<MovieRating> movieRatings { get; set; }
+        public DbSet<PersonGenre> PersonGenres { get; set; }
+        public DbSet<MovieRating> MovieRatings { get; set; }
+        public DbSet<PersonMovie> PersonMovies { get; set; }
+        public DbSet<PersonMovieGenre> PersonMovieGenres { get; set; }
     }
 }
