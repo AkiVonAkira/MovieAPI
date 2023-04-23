@@ -6,12 +6,12 @@ namespace MovieAPI.Models
     public class PersonMovie
     {
         [Key]
-        public int Id { get; set; }
+        public int? Id { get; set; }
         [ForeignKey("Person")]
-        public int PersonId { get; set; }
-        virtual public Person Person { get; set; }
+        public int? PersonId { get; set; }
+        virtual public Person? Person { get; set; }
         [ForeignKey("Movie")]
-        public int MovieId { get; set; }
-        virtual public Movie Movie { get; set; }
+        public int? MovieId { get; set; }
+        virtual public Movie? Movie { get; set; }
     }
 }

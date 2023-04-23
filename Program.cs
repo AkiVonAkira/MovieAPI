@@ -207,52 +207,52 @@ namespace MovieAPI
                 return Results.Created($"/api/Person/Genres?personName={person.Name}&genreName={genre.GenreName}", personGenre);
             });
 
-            // Add movie links to specific person and genre
-            app.MapPost("/api/Person/MovieLinks", async (DataContext context, PersonMovieGenre model) =>
-            {
-                var person = await context.Persons
-                    .FirstOrDefaultAsync(p => p.PersonId == model.PersonId);
+            //// Add movie links to specific person and genre
+            //app.MapPost("/api/Person/MovieLinks", async (DataContext context, PersonMovieGenre model) =>
+            //{
+            //    var person = await context.Persons
+            //        .FirstOrDefaultAsync(p => p.PersonId == model.PersonId);
 
-                if (person == null)
-                {
-                    return Results.BadRequest("Person not found.");
-                }
+            //    if (person == null)
+            //    {
+            //        return Results.BadRequest("Person not found.");
+            //    }
 
-                var movie = await context.Movies
-                    .FirstOrDefaultAsync(m => m.MovieId == model.MovieId);
+            //    var movie = await context.Movies
+            //        .FirstOrDefaultAsync(m => m.MovieId == model.MovieId);
 
-                if (movie == null)
-                {
-                    return Results.BadRequest("Movie not found.");
-                }
+            //    if (movie == null)
+            //    {
+            //        return Results.BadRequest("Movie not found.");
+            //    }
 
-                var genre = await context.Genres
-                    .FirstOrDefaultAsync(g => g.GenreId == model.GenreId);
+            //    var genre = await context.Genres
+            //        .FirstOrDefaultAsync(g => g.GenreId == model.GenreId);
 
-                if (genre == null)
-                {
-                    return Results.BadRequest("Genre not found.");
-                }
+            //    if (genre == null)
+            //    {
+            //        return Results.BadRequest("Genre not found.");
+            //    }
 
-                var personMovie = new PersonMovie
-                {
-                    PersonId = person.PersonId,
-                    MovieId = movie.MovieId
-                };
+            //    var personMovie = new PersonMovie
+            //    {
+            //        PersonId = person.PersonId,
+            //        MovieId = movie.MovieId
+            //    };
 
-                var personGenre = new PersonGenre
-                {
-                    PersonId = person.PersonId,
-                    GenreId = genre.GenreId
-                };
+            //    var personGenre = new PersonGenre
+            //    {
+            //        PersonId = person.PersonId,
+            //        GenreId = genre.GenreId
+            //    };
 
-                await context.PersonMovies.AddAsync(personMovie);
-                await context.PersonGenres.AddAsync(personGenre);
-                await context.SaveChangesAsync();
+            //    await context.PersonMovies.AddAsync(personMovie);
+            //    await context.PersonGenres.AddAsync(personGenre);
+            //    await context.SaveChangesAsync();
 
-                return Results.Created($"/api/Person/MovieLinks?personId={model.PersonId}&movieId={model.MovieId}&genreId={model.GenreId}",
-                    new { PersonMovieId = personMovie.Id, PersonGenreId = personGenre.Id });
-            });
+            //    return Results.Created($"/api/Person/MovieLinks?personId={model.PersonId}&movieId={model.MovieId}&genreId={model.GenreId}",
+            //        new { PersonMovieId = personMovie.Id, PersonGenreId = personGenre.Id });
+            //});
         }
     }
 }
