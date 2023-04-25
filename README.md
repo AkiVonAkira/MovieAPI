@@ -14,8 +14,8 @@
 
 ## 🔑 Key features
 
-- Connect user to a movie
-- Based on connected movies suggest new movies with the same genres.
+- Create, and link movies, genres and persons
+- Discover movies using TMDB.
 
 ---
 
