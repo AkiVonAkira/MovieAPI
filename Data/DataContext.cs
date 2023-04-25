@@ -13,6 +13,5 @@ namespace MovieAPI.Data
         public DbSet<MovieGenre> MovieGenres { get; set; }
         public DbSet<MovieRating> MovieRatings { get; set; }
         public DbSet<PersonGenre> PersonGenres { get; set; }
-        public DbSet<PersonMovie> PersonMovies { get; set; }
     }
 }

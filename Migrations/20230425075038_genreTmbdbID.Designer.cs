@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MovieAPI.Data;
 
@@ -11,9 +12,10 @@ using MovieAPI.Data;
 namespace MovieAPI.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230425075038_genreTmbdbID")]
+    partial class genreTmbdbID
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,8 +34,8 @@ namespace MovieAPI.Migrations
 
                     b.Property<string>("GenreDescription")
                         .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("GenreName")
                         .IsRequired()
@@ -66,15 +68,10 @@ namespace MovieAPI.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int?>("PersonGenreId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("tmbdId")
                         .HasColumnType("int");
 
                     b.HasKey("MovieId");
-
-                    b.HasIndex("PersonGenreId");
 
                     b.ToTable("Movies");
                 });
@@ -175,13 +172,27 @@ namespace MovieAPI.Migrations
                     b.ToTable("PersonGenres");
                 });
 
-            modelBuilder.Entity("MovieAPI.Models.Movie", b =>
+            modelBuilder.Entity("MovieAPI.Models.PersonMovie", b =>
                 {
-                    b.HasOne("MovieAPI.Models.PersonGenre", "PersonGenre")
-                        .WithMany()
-                        .HasForeignKey("PersonGenreId");
+                    b.Property<int?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.Navigation("PersonGenre");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int?>("Id"), 1L, 1);
+
+                    b.Property<int?>("MovieId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PersonId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MovieId");
+
+                    b.HasIndex("PersonId");
+
+                    b.ToTable("PersonMovies");
                 });
 
             modelBuilder.Entity("MovieAPI.Models.MovieGenre", b =>
@@ -225,6 +236,21 @@ namespace MovieAPI.Migrations
                         .HasForeignKey("PersonId");
 
                     b.Navigation("Genre");
+
+                    b.Navigation("Person");
+                });
+
+            modelBuilder.Entity("MovieAPI.Models.PersonMovie", b =>
+                {
+                    b.HasOne("MovieAPI.Models.Movie", "Movie")
+                        .WithMany()
+                        .HasForeignKey("MovieId");
+
+                    b.HasOne("MovieAPI.Models.Person", "Person")
+                        .WithMany()
+                        .HasForeignKey("PersonId");
+
+                    b.Navigation("Movie");
 
                     b.Navigation("Person");
                 });

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MovieAPI.Data;
 
@@ -11,9 +12,10 @@ using MovieAPI.Data;
 namespace MovieAPI.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230425093604_removePersonMovie")]
+    partial class removePersonMovie
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,15 +68,10 @@ namespace MovieAPI.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int?>("PersonGenreId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("tmbdId")
                         .HasColumnType("int");
 
                     b.HasKey("MovieId");
-
-                    b.HasIndex("PersonGenreId");
 
                     b.ToTable("Movies");
                 });
@@ -173,15 +170,6 @@ namespace MovieAPI.Migrations
                     b.HasIndex("PersonId");
 
                     b.ToTable("PersonGenres");
-                });
-
-            modelBuilder.Entity("MovieAPI.Models.Movie", b =>
-                {
-                    b.HasOne("MovieAPI.Models.PersonGenre", "PersonGenre")
-                        .WithMany()
-                        .HasForeignKey("PersonGenreId");
-
-                    b.Navigation("PersonGenre");
                 });
 
             modelBuilder.Entity("MovieAPI.Models.MovieGenre", b =>

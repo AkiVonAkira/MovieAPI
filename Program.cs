@@ -20,6 +20,12 @@ namespace MovieAPI
             builder.Services.AddDbContext<DataContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            var configurationBuilder = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("./appsettings.json", optional: true, reloadOnChange: true);
+            var configuration = configurationBuilder.Build();
+            string? tmdbKey = configuration["key"];
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -30,7 +36,11 @@ namespace MovieAPI
             }
 
             app.UseHttpsRedirection();
-            //app.UseAuthorization();
+            app.UseAuthorization();
+
+            CreateMethods(app);
+
+
 
             // Get all Movies
             app.MapGet("/api/movie", async (DataContext context) =>
@@ -40,14 +50,14 @@ namespace MovieAPI
             });
 
             // Get all Genres
-            app.MapGet("/api/Genre/GetAllGenre/", async (DataContext context) =>
+            app.MapGet("/api/genre/", async (DataContext context) =>
             {
                 var genres = await context.Genres.ToListAsync();
                 return Results.Ok(genres);
             });
 
             // Get all Persons
-            app.MapGet("/api/Persons/GetPersons/", async (DataContext context) =>
+            app.MapGet("/api/person/", async (DataContext context) =>
             {
                 var persons = await context.Persons.ToListAsync();
                 return Results.Ok(persons);
@@ -57,13 +67,7 @@ namespace MovieAPI
             app.MapGet("/api/movie/{id}", async (DataContext context, int id) =>
                 await context.Movies.FindAsync(id) is Movie movie ? Results.Ok(movie) : Results.NotFound("Movie not found."));
 
-            //Create Movies
-            app.MapPost("/api/movie", async (DataContext context, Movie movie) =>
-            {
-                context.Movies.Add(movie);
-                await context.SaveChangesAsync();
-                return Results.Created($"/api/Movie/{movie.MovieId}", movie);
-            });
+
 
             // Updating Movies
             app.MapPut("/api/movie/{id}", async (DataContext context, Movie updatedMovie, int id) =>
@@ -72,6 +76,7 @@ namespace MovieAPI
 
                 if (existingMovie != null)
                 {
+                    updatedMovie.MovieId = id;
                     context.Entry(existingMovie).CurrentValues.SetValues(updatedMovie);
                     await context.SaveChangesAsync();
                     return Results.Ok(updatedMovie);
@@ -80,7 +85,7 @@ namespace MovieAPI
             });
 
             // Deleting Movies
-            app.MapDelete("/api/Movie/{id}", async (DataContext context, int id) =>
+            app.MapDelete("/api/movie/{id}", async (DataContext context, int id) =>
             {
                 var movieItemFromDb = await context.Movies.FindAsync(id);
 
@@ -94,9 +99,9 @@ namespace MovieAPI
             });
 
             // Get movies linked to a person
-            app.MapGet("/api/Person/GetMovies", async (DataContext context, string name) =>
+            app.MapGet("/api/person/movie", async (DataContext context, string name) =>
             {
-                var personMovies = await context.PersonMovies
+                var personMovies = await context.MovieRatings
                     .Include(pm => pm.Movie)
                     .Where(pm => pm.Person.Name == name)
                     .Select(pm => new
@@ -111,7 +116,7 @@ namespace MovieAPI
             });
 
             // Get Genres linked to a person
-            app.MapGet("/api/PersonGenre/", async (DataContext context, string name) =>
+            app.MapGet("/api/genre/person", async (DataContext context, string name) =>
             {
                 var personGenres = await context.PersonGenres
                     .Include(x => x.Genre)
@@ -124,7 +129,7 @@ namespace MovieAPI
             });
 
             // Get ratings on movies linked to a person
-            app.MapGet("/api/Person/Ratings/", async (DataContext context, string name) =>
+            app.MapGet("/api/rating/person", async (DataContext context, string name) =>
             {
                 var personMovieRatings = await context.MovieRatings
                     .Include(mr => mr.Movie)
@@ -141,18 +146,15 @@ namespace MovieAPI
             });
 
             // Add ratings to movies linked to a person
-            app.MapPost("/api/Person/Ratings", async (DataContext context, MovieRating mr) =>
+            app.MapPost("/api/rating/person", async (DataContext context, MovieRating mr) =>
             {
                 var person = await context.Persons.FirstOrDefaultAsync(p => p.PersonId == mr.PersonId);
-
                 if (person == null) { return Results.BadRequest("Person not found."); }
 
                 var movie = await context.Movies.FirstOrDefaultAsync(m => m.MovieId == mr.MovieId);
-
                 if (movie == null) { return Results.BadRequest("Movie not found."); }
 
                 var existingRating = await context.MovieRatings.FirstOrDefaultAsync(mr => mr.MovieId == movie.MovieId && mr.PersonId == person.PersonId);
-
                 if (existingRating != null) { return Results.BadRequest("Rating already exists."); }
 
                 var movieRating = new MovieRating
@@ -165,35 +167,20 @@ namespace MovieAPI
                 await context.MovieRatings.AddAsync(movieRating);
                 await context.SaveChangesAsync();
 
-                return Results.Created($"/api/Person/Ratings?personId={mr.PersonId}&movieId={mr.MovieId}", movieRating);
+                return Results.Created($"/api/person/Ratings?personId={mr.PersonId}&movieId={mr.MovieId}", movieRating);
             });
 
             // Add genre to a person
-            app.MapPost("/api/Person/Genres", async (DataContext context, PersonGenre model) =>
+            app.MapPost("/api/person/genre", async (DataContext context, PersonGenre model) =>
             {
-                var person = await context.Persons
-                    .FirstOrDefaultAsync(p => p.PersonId == model.PersonId);
+                var person = await context.Persons.FirstOrDefaultAsync(p => p.PersonId == model.PersonId);
+                if (person == null) { return Results.BadRequest("Person not found."); }
 
-                if (person == null)
-                {
-                    return Results.BadRequest("Person not found.");
-                }
+                var genre = await context.Genres.FirstOrDefaultAsync(g => g.GenreId == model.GenreId);
+                if (genre == null) { return Results.BadRequest("Genre not found."); }
 
-                var genre = await context.Genres
-                    .FirstOrDefaultAsync(g => g.GenreId == model.GenreId);
-
-                if (genre == null)
-                {
-                    return Results.BadRequest("Genre not found.");
-                }
-
-                var existingPersonGenre = await context.PersonGenres
-                    .FirstOrDefaultAsync(pg => pg.PersonId == person.PersonId && pg.GenreId == genre.GenreId);
-
-                if (existingPersonGenre != null)
-                {
-                    return Results.BadRequest("Genre already exists for the person.");
-                }
+                var existingPersonGenre = await context.PersonGenres.FirstOrDefaultAsync(pg => pg.PersonId == person.PersonId && pg.GenreId == genre.GenreId);
+                if (existingPersonGenre != null) { return Results.BadRequest("Genre already exists for the person."); }
 
                 var personGenre = new PersonGenre
                 {
@@ -204,55 +191,122 @@ namespace MovieAPI
                 await context.PersonGenres.AddAsync(personGenre);
                 await context.SaveChangesAsync();
 
-                return Results.Created($"/api/Person/Genres?personName={person.Name}&genreName={genre.GenreName}", personGenre);
+                return Results.Created($"/api/person/Genres?personName={person.Name}&genreName={genre.GenreName}", personGenre);
             });
 
-            //// Add movie links to specific person and genre
-            //app.MapPost("/api/Person/MovieLinks", async (DataContext context, PersonMovieGenre model) =>
-            //{
-            //    var person = await context.Persons
-            //        .FirstOrDefaultAsync(p => p.PersonId == model.PersonId);
+            // Add movies linked to a person
+            app.MapPost("/api/person/movie", async (DataContext context, MovieRating pm) =>
+            {
+                var person = await context.Persons.FirstOrDefaultAsync(p => p.PersonId == pm.PersonId);
+                if (person == null) { return Results.BadRequest("Person not found."); }
 
-            //    if (person == null)
-            //    {
-            //        return Results.BadRequest("Person not found.");
-            //    }
+                var movie = await context.Movies.FirstOrDefaultAsync(m => m.MovieId == pm.MovieId);
+                if (movie == null) { return Results.BadRequest("Movie not found."); }
 
-            //    var movie = await context.Movies
-            //        .FirstOrDefaultAsync(m => m.MovieId == model.MovieId);
+                var existingPersonMovie = await context.MovieRatings.FirstOrDefaultAsync(pm => pm.MovieId == movie.MovieId && pm.PersonId == person.PersonId);
+                if (existingPersonMovie != null) { return Results.BadRequest("Person Movie already exists."); }
 
-            //    if (movie == null)
-            //    {
-            //        return Results.BadRequest("Movie not found.");
-            //    }
+                var personMovie = new MovieRating
+                {
+                    PersonId = person.PersonId,
+                    MovieId = movie.MovieId,
+                };
 
-            //    var genre = await context.Genres
-            //        .FirstOrDefaultAsync(g => g.GenreId == model.GenreId);
+                await context.MovieRatings.AddAsync(personMovie);
+                await context.SaveChangesAsync();
 
-            //    if (genre == null)
-            //    {
-            //        return Results.BadRequest("Genre not found.");
-            //    }
+                return Results.Created($"/api/person/Movie?personId={pm.PersonId}&movieId={pm.MovieId}", personMovie);
+            });
 
-            //    var personMovie = new PersonMovie
-            //    {
-            //        PersonId = person.PersonId,
-            //        MovieId = movie.MovieId
-            //    };
 
-            //    var personGenre = new PersonGenre
-            //    {
-            //        PersonId = person.PersonId,
-            //        GenreId = genre.GenreId
-            //    };
+            // Add movie links to specific person and genre
+            app.MapPost("/api/person/MovieLinks", async (DataContext context, Movie movieModel, int personId, string genreName) =>
+            {
+                var person = await context.Persons.FirstOrDefaultAsync(p => p.PersonId == personId);
+                if (person == null) { return Results.BadRequest("Person not found."); }
 
-            //    await context.PersonMovies.AddAsync(personMovie);
-            //    await context.PersonGenres.AddAsync(personGenre);
-            //    await context.SaveChangesAsync();
+                var genre = await context.Genres.FirstOrDefaultAsync(g => g.GenreName == genreName);
+                if (genre == null) { return Results.BadRequest("Genre not found."); }
 
-            //    return Results.Created($"/api/Person/MovieLinks?personId={model.PersonId}&movieId={model.MovieId}&genreId={model.GenreId}",
-            //        new { PersonMovieId = personMovie.Id, PersonGenreId = personGenre.Id });
-            //});
+                var existingPersonGenre = await context.PersonGenres.FirstOrDefaultAsync(pg => pg.PersonId == person.PersonId && pg.GenreId == genre.GenreId);
+
+                var personGenre = new PersonGenre
+                {
+                    PersonId = person.PersonId,
+                    GenreId = genre.GenreId
+                };
+
+                await context.PersonGenres.AddAsync(personGenre);
+
+                var movie = await context.Movies.FirstOrDefaultAsync(m => m.MovieId == movieModel.MovieId);
+                if (movie == null)
+                {
+                    movie = new Movie
+                    {
+                        MovieName = movieModel.MovieName,
+                        MovieLink = movieModel.MovieLink,
+                        tmbdId = movieModel.tmbdId,
+                        PersonGenreId = personGenre.Id
+                    };
+                    movie.PersonGenreId = personGenre.Id;
+                    movie.PersonGenre = personGenre;
+                    await context.Movies.AddAsync(movie);
+                }
+
+                await context.SaveChangesAsync();
+
+                return Results.Ok(movie);
+                //return Results.Created($"/api/movie/{movie.MovieId}", movie);
+            });
+
+            app.MapGet("/api/movie/discover/", async (DataContext context, string genreName) =>
+            {
+                var genre = await context.Genres.FirstOrDefaultAsync(g => g.GenreName == genreName);
+
+                var url = $@"https://api.themoviedb.org/3/discover/movie?api_key={tmdbKey}&language=en-US
+                                &sort_by=popularity.desc&include_adult=false&include_video=false&page=1
+                                &with_genres={genre.tmbdId}&with_watch_monetization_types=free";
+
+                var client = new HttpClient();
+
+                var response = await client.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+
+                //This returns the raw dataas json , easier to read
+                return Results.Content(content, contentType: "application/json");
+            });
+
+
+            app.Run();
+        }
+
+        private static void CreateMethods(WebApplication app)
+        {
+            // Create Movies
+            app.MapPost("/api/movie", async (DataContext context, Movie movie) =>
+            {
+                context.Movies.Add(movie);
+                await context.SaveChangesAsync();
+                return Results.Created($"/api/movie/{movie.MovieId}", movie);
+            });
+
+            // Create Genres
+            app.MapPost("/api/genre", async (DataContext context, Genre genre) =>
+            {
+                context.Genres.Add(genre);
+                await context.SaveChangesAsync();
+                return Results.Created($"/api/movie/{genre.GenreId}", genre);
+            });
+
+            // Create Persons
+            app.MapPost("/api/person", async (DataContext context, Person person) =>
+            {
+                context.Persons.Add(person);
+                await context.SaveChangesAsync();
+                return Results.Created($"/api/movie/{person.PersonId}", person);
+            });
         }
     }
 }

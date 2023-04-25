@@ -10,7 +10,8 @@ namespace MovieAPI.Models
         [StringLength(25)]
         public string? GenreName { get; set; }
         [Required]
-        [StringLength(100)]
+        [StringLength(250)]
         public string? GenreDescription { get; set; }
+        public int? tmbdId { get; set; }
     }
 }
