@@ -116,7 +116,7 @@ namespace MovieAPI
             });
 
             // Get Genres linked to a person
-            app.MapGet("/api/genre/person", async (DataContext context, string name) =>
+            app.MapGet("/api/person/genre", async (DataContext context, string name) =>
             {
                 var personGenres = await context.PersonGenres
                     .Include(x => x.Genre)
@@ -210,6 +210,7 @@ namespace MovieAPI
                 {
                     PersonId = person.PersonId,
                     MovieId = movie.MovieId,
+                    Rating = 0,
                 };
 
                 await context.MovieRatings.AddAsync(personMovie);
