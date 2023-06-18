@@ -20,9 +20,20 @@ namespace MovieAPI
             builder.Services.AddDbContext<DataContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            // Add CORS services and configure CORS policies
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.AllowAnyOrigin()
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
+                });
+            });
+
             var configurationBuilder = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("./appsettings.json", optional: true, reloadOnChange: true);
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("./appsettings.json", optional: true, reloadOnChange: true);
             var configuration = configurationBuilder.Build();
             string? tmdbKey = configuration["key"];
 
@@ -36,6 +47,7 @@ namespace MovieAPI
             }
 
             app.UseHttpsRedirection();
+            app.UseCors();
             app.UseAuthorization();
 
             CreateMethods(app);
