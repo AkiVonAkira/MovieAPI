@@ -12,7 +12,7 @@
 
 ---
 
-## 🔑 Key features
+## 🔑 Features
 
 - Create, and link movies, genres and persons
 - Discover movies using TMDB.
@@ -98,3 +98,10 @@ Update movie with an ID (body requires everything but the ID)
 `​/api​/movie​/{id}`
 
 ---
+
+## Installation
+
+1. Clone this repository: `git clone https://github.com/AkiVonAkira/MovieAPI.git`
+2. Navigate to the project directory: `cd MovieAPI`
+3. Launch your SQL database host of preference (SQLSSMS etc.) and run `dotnet ef database update` to build the Database tables.
+4. Start the API: `dotnet run` or `dotnet watch --no-hot-reload`
